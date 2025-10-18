@@ -13,33 +13,43 @@ export default function Home() {
     const content = input.trim();
     if (!content) return;
     setInput("");
-    const next = [...messages, { role: "user", content }];
+
+    // enforce literal types for role
+    const next: Msg[] = [...messages, { role: "user" as const, content }];
     setMessages(next);
     setLoading(true);
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, system: "You are a helpful assistant." })
+        body: JSON.stringify({
+          messages: next,
+          system: "You are a helpful assistant.",
+        }),
       });
       const data = await res.json();
+
       if (data.ok) {
-        setMessages([...next, { role: "assistant", content: data.text }]);
+        setMessages([...next, { role: "assistant" as const, content: data.text }]);
       } else {
-        setMessages([...next, { role: "assistant", content: `Error: ${data.error}` }]);
+        setMessages([...next, { role: "assistant" as const, content: `Error: ${data.error}` }]);
       }
     } catch (e: any) {
-      setMessages([...next, { role: "assistant", content: `Network error: ${e?.message}` }]);
+      setMessages([...next, { role: "assistant" as const, content: `Network error: ${e?.message}` }]);
     } finally {
       setLoading(false);
     }
   }
 
+  // ✅ الـ return لازم يفضل داخل الدالة
   return (
     <main className="min-h-dvh flex flex-col items-center p-6 gap-6">
       <div className="w-full max-w-2xl">
         <h1 className="text-2xl font-bold">Next.js + Gemini Chat</h1>
-        <p className="text-sm opacity-70">Your API key stays on the server. Safe to share the site link.</p>
+        <p className="text-sm opacity-70">
+          Your API key stays on the server. Safe to share the site link.
+        </p>
       </div>
 
       <div className="w-full max-w-2xl border rounded-2xl p-4 space-y-3">
@@ -49,7 +59,11 @@ export default function Home() {
           )}
           {messages.map((m, i) => (
             <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
-              <div className={`inline-block px-3 py-2 rounded-xl text-sm ${m.role === "user" ? "bg-gray-200" : "bg-gray-100"}`}>
+              <div
+                className={`inline-block px-3 py-2 rounded-xl text-sm ${
+                  m.role === "user" ? "bg-gray-200" : "bg-gray-100"
+                }`}
+              >
                 <b className="opacity-70 mr-1">{m.role === "user" ? "You" : "AI"}:</b>
                 <span>{m.content}</span>
               </div>
@@ -70,7 +84,9 @@ export default function Home() {
             className="px-4 py-2 rounded-xl border disabled:opacity-50"
             onClick={send}
             disabled={loading}
-          >Send</button>
+          >
+            Send
+          </button>
         </div>
       </div>
     </main>
